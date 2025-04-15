@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>View Listings</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f2f2f2;
+      margin: 0;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+      color: #009579;
+    }
+    .listing {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-top: 30px;
+    }
+    .card {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+    }
+    .card:hover {
+      transform: scale(1.03);
+    }
+    .card img {
+      max-width: 100%;
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+    .card h3 {
+      margin: 0;
+      color: #333;
+    }
+    .card p {
+      margin: 5px 0;
+      color: #666;
+    }
+    .price {
+      color: #009579;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h2>Available Listings</h2>
+  <div class="listing" id="listingContainer"></div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAT9aL9LFLRpxmgyHpbYD-MXUy4W2YUWjo",
+      authDomain: "campus-marketplace-615d7.firebaseapp.com",
+      projectId: "campus-marketplace-615d7",
+      storageBucket: "campus-marketplace-615d7.appspot.com",
+      messagingSenderId: "711274585749",
+      appId: "1:711274585749:web:3381bbece0dd48dca6059c"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const listingContainer = document.getElementById('listingContainer');
+
+    db.collection('posts').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+      listingContainer.innerHTML = '';
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <img src="${data.imageUrl || 'https://via.placeholder.com/300'}" alt="Item Image" />
+          <h3>${data.title}</h3>
+          <p>${data.description}</p>
+          <p class="price">INR ${data.price}</p>
+        `;
+        listingContainer.appendChild(card);
+      });
+    });
+  </script>
+</body>
+</html>

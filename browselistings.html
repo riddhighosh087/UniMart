@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Browse Listings | UniMart</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 1rem;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #FF6347, #FF8C00);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      animation: gradientBG 6s ease infinite alternate;
+    }
+
+    @keyframes gradientBG {
+      0% {
+        background: linear-gradient(135deg, #FF6347, #FF8C00);
+      }
+      100% {
+        background: linear-gradient(135deg, #FF8C00, #FF6347);
+      }
+    }
+
+    h2 {
+      text-align: center;
+      color: #fff;
+      font-size: 2.2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .search-box {
+      display: flex;
+      gap: 10px;
+      margin: 0 auto 2rem;
+      max-width: 600px;
+      padding: 0.5rem;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .search-box input {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border: none;
+      font-size: 1rem;
+      border-radius: 10px;
+      outline: none;
+    }
+
+    .search-box button {
+      padding: 0.75rem 1.2rem;
+      font-size: 1rem;
+      background-color: #FF6347;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .search-box button:hover {
+      background-color: #FF4500;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.95);
+      border-radius: 16px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+      overflow: hidden;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transition: transform 0.2s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+    }
+
+    .card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+    }
+
+    .info {
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      flex-grow: 1;
+    }
+
+    .info h3 {
+      margin: 0;
+      font-size: 1.25rem;
+      color: #333;
+    }
+
+    .info p {
+      margin: 0.5rem 0;
+      color: #555;
+      font-size: 0.95rem;
+    }
+
+    .price {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #FF6347;
+    }
+
+    .sold-out-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: #e63946;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      z-index: 2;
+    }
+
+    .contact-btn {
+      margin-top: 0.75rem;
+      padding: 0.6rem;
+      background-color: #FF6347;
+      color: white;
+      text-align: center;
+      border-radius: 10px;
+      font-weight: 500;
+      font-size: 0.95rem;
+      text-decoration: none;
+      transition: background 0.3s;
+    }
+
+    .contact-btn:hover {
+      background-color: #FF4500;
+    }
+
+    @media (max-width: 600px) {
+      .search-box {
+        flex-direction: column;
+      }
+
+      .search-box button {
+        width: 100%;
+      }
+
+      .card img {
+        height: 160px;
+      }
+
+      .info h3 {
+        font-size: 1.1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h2>Browse Listings</h2>
+
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="Search by title or description...">
+    <button onclick="loadListings()">Search</button>
+  </div>
+
+  <div class="grid" id="browseListings"></div>
+
+  <!-- Firebase JS SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAT9aL9LFLRpxmgyHpbYD-MXUy4W2YUWjo",
+      authDomain: "campus-marketplace-615d7.firebaseapp.com",
+      projectId: "campus-marketplace-615d7",
+      storageBucket: "campus-marketplace-615d7.appspot.com",
+      messagingSenderId: "711274585749",
+      appId: "1:711274585749:web:3381bbece0dd48dca6059c"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const listingsContainer = document.getElementById('browseListings');
+    const searchInput = document.getElementById('searchInput');
+
+    function loadListings() {
+      const searchTerm = searchInput.value.toLowerCase().trim();
+      listingsContainer.innerHTML = "";
+
+      db.collection('posts').orderBy('createdAt', 'desc').get()
+        .then(snapshot => {
+          let found = false;
+
+          snapshot.forEach(doc => {
+            const item = doc.data();
+            const title = item.title?.toLowerCase() || '';
+            const description = item.description?.toLowerCase() || '';
+            const status = item.status || '';
+            const contactNumber = item.contact || '';
+
+            if (
+              searchTerm === "" || 
+              title.includes(searchTerm) || 
+              description.includes(searchTerm)
+            ) {
+              found = true;
+
+              const anchor = document.createElement('a');
+              anchor.href = `productdetails.html?id=${doc.id}`;
+              anchor.className = 'card';
+
+              anchor.innerHTML = `
+                ${status === 'soldout' ? '<div class="sold-out-badge">Sold Out</div>' : ''}
+                <img src="${item.imageUrl || 'https://via.placeholder.com/300x180?text=No+Image'}" alt="Product Image">
+                <div class="info">
+                  <h3>${item.title}</h3>
+                  <p>${item.description}</p>
+                  <p class="price">₹${item.price}</p>
+                  ${contactNumber ? `<a href="tel:${contactNumber}" class="contact-btn">Contact Seller</a>` : ''}
+                </div>
+              `;
+
+              listingsContainer.appendChild(anchor);
+            }
+          });
+
+          if (!found) {
+            listingsContainer.innerHTML = '<p style="text-align:center; font-size: 1rem; color: #777;">No matching listings found.</p>';
+          }
+        })
+        .catch(error => {
+          console.error("Error loading listings:", error);
+          listingsContainer.innerHTML = '<p style="color:red; text-align:center;">Failed to load listings.</p>';
+        });
+    }
+
+    window.onload = loadListings;
+  </script>
+</body>
+</html>

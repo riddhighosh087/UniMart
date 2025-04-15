@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create a New Listing</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #ffb6c1, #ffc0cb);
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 480px;
+      margin: auto;
+      background: #fff;
+      padding: 24px;
+      border-radius: 20px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #f76c6c;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 14px;
+      margin: 10px 0;
+      border-radius: 12px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+      background: #f9f9f9;
+      transition: border 0.3s, background 0.3s;
+    }
+
+    input:focus, textarea:focus {
+      border-color: #f76c6c;
+      outline: none;
+      background: #fff;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background: #f76c6c;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.3s;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background: #d24d4d;
+      transform: scale(1.05);
+    }
+
+    #status {
+      text-align: center;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    @media (max-width: 480px) {
+      h2 {
+        font-size: 22px;
+      }
+
+      input, textarea, button {
+        font-size: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>📦 Create a New Listing</h2>
+    <input id="title" placeholder="Product Title" />
+    <textarea id="description" placeholder="Description" rows="4"></textarea>
+    <input id="price" placeholder="Price (e.g. ₹499)" type="number" />
+    <input id="contact" placeholder="Contact Number (e.g. +91...)" type="tel" />
+    <input type="file" id="imageInput" accept="image/*" />
+    <button id="postBtn">Post Listing</button>
+    <p id="status"></p>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAT9aL9LFLRpxmgyHpbYD-MXUy4W2YUWjo",
+      authDomain: "campus-marketplace-615d7.firebaseapp.com",
+      projectId: "campus-marketplace-615d7",
+      storageBucket: "campus-marketplace-615d7.appspot.com",
+      messagingSenderId: "711274585749",
+      appId: "1:711274585749:web:3381bbece0dd48dca6059c"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    document.getElementById("postBtn").addEventListener("click", async () => {
+      const title = document.getElementById("title").value.trim();
+      const description = document.getElementById("description").value.trim();
+      const price = document.getElementById("price").value.trim();
+      const contact = document.getElementById("contact").value.trim();
+      const imageFile = document.getElementById("imageInput").files[0];
+      const status = document.getElementById("status");
+
+      if (!title || !description || !price || !contact || !imageFile) {
+        alert("Please fill in all fields and upload an image.");
+        return;
+      }
+
+      const user = auth.currentUser;
+      if (!user) {
+        alert("You must be logged in to post.");
+        return;
+      }
+
+      status.style.color = "#333";
+      status.textContent = "Uploading...";
+
+      try {
+        const formData = new FormData();
+        formData.append("file", imageFile);
+        formData.append("upload_preset", "ddhwbceqy");
+
+        const cloudinaryRes = await fetch("https://api.cloudinary.com/v1_1/ddhwbceqy/image/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        const cloudinaryData = await cloudinaryRes.json();
+
+        if (!cloudinaryData.secure_url) {
+          throw new Error("Image upload failed");
+        }
+
+        await db.collection("posts").add({
+          uid: user.uid,
+          title,
+          description,
+          price,
+          phone: contact,
+          imageUrl: cloudinaryData.secure_url,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+
+        status.style.color = "green";
+        status.textContent = "✅ Post uploaded successfully!";
+        document.getElementById("title").value = "";
+        document.getElementById("description").value = "";
+        document.getElementById("price").value = "";
+        document.getElementById("contact").value = "";
+        document.getElementById("imageInput").value = "";
+      } catch (err) {
+        console.error(err);
+        status.style.color = "red";
+        status.textContent = "❌ Error uploading post. Please try again.";
+      }
+    });
+  </script>
+</body>
+</html>

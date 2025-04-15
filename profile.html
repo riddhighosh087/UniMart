@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Profile</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #e0f7fa, #ffffff);
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 50px auto;
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+    h2 {
+      color: #009579;
+    }
+    .info {
+      margin-top: 20px;
+      line-height: 1.6;
+    }
+    .label {
+      font-weight: bold;
+      color: #555;
+    }
+    #profileImage {
+      width: 120px;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 3px solid #009579;
+      margin: 20px 0;
+    }
+    #logoutBtn, #uploadBtn {
+      background: linear-gradient(135deg, #009579, #00bfae);
+      color: white;
+      padding: 12px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      margin-top: 20px;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.3s;
+    }
+    #logoutBtn {
+      background: linear-gradient(135deg, #ff5252, #ff1744);
+    }
+    #logoutBtn:hover {
+      background: linear-gradient(135deg, #e04848, #d32f2f);
+    }
+    #uploadBtn:hover {
+      background: linear-gradient(135deg, #00bfae, #009579);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>User Profile</h2>
+    <div class="info">
+      <p><span class="label">Email:</span> <span id="userEmail">Loading...</span></p>
+      <img id="profileImage" src="https://via.placeholder.com/120" alt="Profile Picture"/>
+      <input type="file" id="imageUpload" accept="image/*" />
+      <button id="uploadBtn">Upload Profile Picture</button>
+    </div>
+    <button id="logoutBtn">Logout</button>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAT9aL9LFLRpxmgyHpbYD-MXUy4W2YUWjo",
+      authDomain: "campus-marketplace-615d7.firebaseapp.com",
+      projectId: "campus-marketplace-615d7",
+      storageBucket: "campus-marketplace-615d7.appspot.com",
+      messagingSenderId: "711274585749",
+      appId: "1:711274585749:web:3381bbece0dd48dca6059c"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    const userEmailSpan = document.getElementById('userEmail');
+    const profileImg = document.getElementById('profileImage');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const imageUpload = document.getElementById('imageUpload');
+
+    let currentUser;
+
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) return (window.location.href = "index.html");
+      currentUser = user;
+      userEmailSpan.innerText = user.email;
+
+      // Check localStorage for profile picture URL
+      const storedProfilePic = localStorage.getItem('profilePic');
+      if (storedProfilePic) {
+        profileImg.src = storedProfilePic; // Load the stored profile picture
+      }
+    });
+
+    uploadBtn.addEventListener("click", async () => {
+      const file = imageUpload.files[0];
+      if (!file || !currentUser) return alert("Please choose a file first!");
+
+      // Prepare Cloudinary upload
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", "ddhwbceqy"); // Your Cloudinary unsigned preset
+
+      try {
+        const response = await fetch("https://api.cloudinary.com/v1_1/ddhwbceqy/image/upload", {
+          method: "POST",
+          body: formData
+        });
+        const data = await response.json();
+        const url = data.secure_url;
+
+        // Update profile image on page
+        profileImg.src = url;
+
+        // Store the URL in localStorage
+        localStorage.setItem('profilePic', url);
+        alert("Profile picture uploaded!");
+      } catch (error) {
+        console.error("Error uploading to Cloudinary:", error);
+        alert("Failed to upload profile picture.");
+      }
+    });
+
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      auth.signOut().then(() => {
+        // Clear stored profile picture on logout (optional)
+        localStorage.removeItem('profilePic');
+        window.location.href = "index.html";
+      });
+    });
+  </script>
+</body>
+</html>

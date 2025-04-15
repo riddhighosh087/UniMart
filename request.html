@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Contact Requests</title>
+</head>
+<body>
+  <h2>Pending Contact Requests</h2>
+  <div id="requestList"></div>
+
+  <script type="module">
+    import { getFirestore, collection, query, where, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
+
+    const db = getFirestore();
+    const auth = getAuth();
+    const requestList = document.getElementById("requestList");
+
+    onAuthStateChanged(auth, async user => {
+      if (!user) return;
+
+      const q = query(collection(db, "contact_requests"), where("sellerId", "==", user.uid), where("status", "==", "pending"));
+      const snapshot = await getDocs(q);
+
+      if (snapshot.empty) {
+        requestList.innerHTML = "<p>No contact requests.</p>";
+        return;
+      }
+
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+
+        const item = document.createElement("div");
+        item.innerHTML = `
+          <p>Buyer UID: ${data.buyerId} requested your number for product ID: ${data.productId}</p>
+          <button onclick="respond('${docSnap.id}', 'accepted')">Accept</button>
+          <button onclick="respond('${docSnap.id}', 'declined')">Decline</button>
+          <hr />
+        `;
+        requestList.appendChild(item);
+      });
+    });
+
+    window.respond = async (requestId, response) => {
+      const reqRef = doc(db, "contact_requests", requestId);
+      await updateDoc(reqRef, { status: response });
+      location.reload();
+    };
+  </script>
+</body>
+</html>

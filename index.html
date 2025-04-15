@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>UniMart - Login & Signup</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body {
+      background: linear-gradient(135deg, #3f51b5, #2196f3);
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .container {
+      background: #fff;
+      padding: 40px 30px;
+      border-radius: 15px;
+      width: 100%;
+      max-width: 450px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      animation: slideUp 0.6s ease-out;
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 30px;
+      font-size: 2em;
+      font-weight: 600;
+    }
+    input {
+      width: 100%;
+      padding: 15px;
+      margin: 12px 0;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 1em;
+      outline: none;
+      transition: border-color 0.3s ease;
+    }
+    input:focus {
+      border-color: #2196f3;
+    }
+    button {
+      width: 100%;
+      padding: 15px;
+      background-color: #2196f3;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1.1em;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #1976d2;
+    }
+    .link {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 14px;
+    }
+    .link a {
+      color: #2196f3;
+      text-decoration: none;
+      font-weight: bold;
+      transition: color 0.3s ease;
+    }
+    .link a:hover {
+      color: #1976d2;
+    }
+    .hidden {
+      display: none;
+    }
+
+    .error-message {
+      color: red;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+
+    /* Animation for container */
+    @keyframes slideUp {
+      0% {
+        transform: translateY(100px);
+        opacity: 0;
+      }
+      100% {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2 id="formTitle">Login to UniMart</h2>
+    <input type="text" id="name" placeholder="Full Name" class="hidden">
+    <input type="email" id="email" placeholder="Email" required>
+    <input type="password" id="password" placeholder="Password" required>
+    <button id="actionBtn">Login</button>
+    <div class="link" id="toggleLink">
+      Don't have an account? <a href="#" id="toggleForm">Signup</a>
+    </div>
+    <div class="link">
+      <a href="#" id="forgotPass">Forgot Password?</a>
+    </div>
+    <div class="error-message" id="errorMessage"></div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script type="module">
+    import { firebaseConfig } from './config.js';  // Replace with your config path
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    // Set persistence to LOCAL to keep the user logged in even after app closes
+    firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+      .then(() => {
+        const formTitle = document.getElementById('formTitle');
+        const nameInput = document.getElementById('name');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const actionBtn = document.getElementById('actionBtn');
+        const toggleLink = document.getElementById('toggleForm');
+        const forgotPassLink = document.getElementById('forgotPass');
+        const errorMessage = document.getElementById('errorMessage');
+
+        let isLogin = true;
+
+        // Check if the user is already logged in
+        auth.onAuthStateChanged(user => {
+          if (user) {
+            window.location.href = "dashboard.html";  // Redirect to the dashboard if already logged in
+          }
+        });
+
+        toggleLink.addEventListener('click', () => {
+          isLogin = !isLogin;
+          if (isLogin) {
+            formTitle.textContent = "Login to UniMart";
+            nameInput.classList.add('hidden');
+            actionBtn.textContent = "Login";
+            toggleLink.textContent = "Don't have an account? Signup";
+          } else {
+            formTitle.textContent = "Sign Up to UniMart";
+            nameInput.classList.remove('hidden');
+            actionBtn.textContent = "Signup";
+            toggleLink.textContent = "Already have an account? Login";
+          }
+        });
+
+        actionBtn.addEventListener('click', () => {
+          const email = emailInput.value.trim();
+          const password = passwordInput.value;
+
+          // Clear error message before new action
+          errorMessage.textContent = '';
+
+          if (isLogin) {
+            auth.signInWithEmailAndPassword(email, password)
+              .then((userCredential) => {
+                if (!userCredential.user.emailVerified) {
+                  alert("Please verify your email before logging in.");
+                  auth.signOut();
+                  return;
+                }
+                window.location.href = "dashboard.html";  // Redirect to dashboard
+              })
+              .catch(err => {
+                if (err.code === 'auth/user-not-found') {
+                  errorMessage.textContent = 'Email is not registered.';
+                } else if (err.code === 'auth/wrong-password') {
+                  errorMessage.textContent = 'Incorrect password. Please try again.';
+                } else {
+                  errorMessage.textContent = 'Login Error: ' + err.message;
+                }
+              });
+          } else {
+            const name = nameInput.value.trim();
+            auth.createUserWithEmailAndPassword(email, password)
+              .then((userCredential) => {
+                const user = userCredential.user;
+                user.updateProfile({ displayName: name });
+                user.sendEmailVerification().then(() => {
+                  alert("Verification email sent. Please verify to login.");
+                  auth.signOut();
+                });
+              })
+              .catch(err => {
+                errorMessage.textContent = 'Signup Error: ' + err.message;
+              });
+          }
+        });
+
+        // Forgot Password functionality
+        forgotPassLink.addEventListener('click', () => {
+          const email = emailInput.value.trim();
+          if (email) {
+            auth.sendPasswordResetEmail(email)
+              .then(() => {
+                alert("Password reset email sent. Please check your inbox.");
+              })
+              .catch(err => {
+                errorMessage.textContent = 'Error: ' + err.message;
+              });
+          } else {
+            alert("Please enter an email address first.");
+          }
+        });
+      })
+      .catch((error) => {
+        console.error("Error setting persistence:", error);
+      });
+  </script>
+</body>
+</html>

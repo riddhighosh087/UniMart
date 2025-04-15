@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>User Profile</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+    body {
+      min-height: 100vh;
+      background: #222D32;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .profile-box {
+      text-align: center;
+      background: #2c3e50;
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.4);
+    }
+    .profile-pic {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #009579;
+      margin-bottom: 15px;
+    }
+    .user-name {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    .user-email {
+      font-size: 16px;
+      margin-bottom: 20px;
+      color: #ccc;
+    }
+    #signoutbtn {
+      height: 45px;
+      padding: 0 20px;
+      font-size: 16px;
+      background: #009579;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: 0.4s;
+    }
+    #signoutbtn:hover {
+      background: #006653;
+    }
+  </style>
+</head>
+<body>
+  <div class="profile-box" id="profileBox">
+    <p>Loading profile...</p>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+  <!-- Firebase Config -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAT9aL9LFLRpxmgyHpbYD-MXUy4W2YUWjo",
+      authDomain: "campus-marketplace-615d7.firebaseapp.com",
+      projectId: "campus-marketplace-615d7",
+      storageBucket: "campus-marketplace-615d7.appspot.com",
+      messagingSenderId: "711274585749",
+      appId: "1:711274585749:web:3381bbece0dd48dca6059c"
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script>
+
+  <!-- App Script -->
+  <script>
+    const profileBox = document.getElementById('profileBox');
+
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        const { displayName, email, photoURL } = user;
+
+        profileBox.innerHTML = `
+          <img class="profile-pic" src="${photoURL || 'https://via.placeholder.com/100'}" alt="User Pic" />
+          <div class="user-name">${displayName || 'No Name'}</div>
+          <div class="user-email">${email}</div>
+          <input type="button" id="signoutbtn" value="Sign Out">
+        `;
+
+        document.getElementById('signoutbtn').addEventListener('click', () => {
+          firebase.auth().signOut().then(() => {
+            alert("Signed out successfully");
+            window.location.href = "login.html"; // or your login page
+          });
+        });
+      } else {
+        window.location.href = "login.html";
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard - UniMart</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      transition: all 0.3s ease-in-out;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #FF6347, #FF8C00);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      animation: gradientBG 6s ease infinite alternate;
+    }
+
+    @keyframes gradientBG {
+      0% {
+        background: linear-gradient(135deg, #FF6347, #FF8C00);
+      }
+      100% {
+        background: linear-gradient(135deg, #FF8C00, #FF6347);
+      }
+    }
+
+    header {
+      padding: 2rem 1rem;
+      text-align: center;
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(6px);
+      border-bottom: 2px solid rgba(255,255,255,0.2);
+    }
+
+    header h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    .logout {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #fff;
+      color: #FF6347;
+      padding: 12px 18px;
+      border-radius: 50px;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      z-index: 999;
+      box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+    }
+
+    .logout:hover {
+      background: #333;
+      color: #fff;
+    }
+
+    .container {
+      flex: 1;
+      padding: 30px 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 25px;
+      width: 100%;
+      max-width: 1000px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.95);
+      border-radius: 20px;
+      padding: 30px 20px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      transform: translateY(0);
+    }
+
+    .card:hover {
+      transform: translateY(-10px);
+    }
+
+    .card i {
+      font-size: 2.5rem;
+      margin-bottom: 15px;
+      color: #FF6347;
+      transition: transform 0.3s ease;
+    }
+
+    .card:hover i {
+      transform: scale(1.2);
+    }
+
+    .card h3 {
+      font-size: 1.6rem;
+      color: #333;
+      margin-bottom: 15px;
+    }
+
+    .card a {
+      display: inline-block;
+      padding: 12px 24px;
+      border-radius: 30px;
+      background: #FF6347;
+      color: #fff;
+      text-decoration: none;
+      font-weight: bold;
+      font-size: 1rem;
+      transition: background 0.3s ease;
+    }
+
+    .card a:hover {
+      background: #FF4500;
+    }
+
+    footer {
+      background: rgba(0, 0, 0, 0.4);
+      padding: 10px;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #fff;
+    }
+
+    @media (max-width: 600px) {
+      header h1 {
+        font-size: 1.6rem;
+      }
+
+      .card h3 {
+        font-size: 1.3rem;
+      }
+
+      .card i {
+        font-size: 2rem;
+      }
+
+      .card a {
+        font-size: 0.9rem;
+        padding: 10px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+
+  <header>
+    <h1>Welcome to UniMart</h1>
+    <p>Your Campus Marketplace</p>
+  </header>
+
+  <div class="container">
+    <div class="actions">
+      <div class="card">
+        <i class="fas fa-plus-circle"></i>
+        <h3>Post New Item</h3>
+        <a href="post.html">Go</a>
+      </div>
+      <div class="card">
+        <i class="fas fa-clipboard-list"></i>
+        <h3>My Listings</h3>
+        <a href="mylistings.html">Go</a>
+      </div>
+      <div class="card">
+        <i class="fas fa-search"></i>
+        <h3>Browse Items</h3>
+        <a href="browselistings.html">Go</a>
+      </div>
+      <div class="card">
+        <i class="fas fa-user-circle"></i>
+        <h3>My Profile</h3>
+        <a href="profile.html">Go</a>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 UniMart. All rights reserved.</p>
+  </footer>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAT9aL9LFLRpxmgyHpbYD-MXUy4W2YUWjo",
+      authDomain: "campus-marketplace-615d7.firebaseapp.com",
+      projectId: "campus-marketplace-615d7",
+      storageBucket: "campus-marketplace-615d7.appspot.com",
+      messagingSenderId: "711274585749",
+      appId: "1:711274585749:web:3381bbece0dd48dca6059c"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    auth.onAuthStateChanged(user => {
+      if (!user) {
+        window.location.href = 'login.html';
+      }
+    });
+
+    function logout() {
+      auth.signOut().then(() => {
+        window.location.href = 'login.html';
+      });
+    }
+  </script>
+
+</body>
+</html>
